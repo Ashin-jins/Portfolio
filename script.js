@@ -23,8 +23,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const contactForm = document.getElementById('contact-form');
   const submitBtn = document.getElementById('form-submit-btn');
 
-  // Force classy dark theme
-  body.className = 'dark-theme';
+  // Theme Switcher System (iOS UI style)
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const savedTheme = localStorage.getItem('ashin-portfolio-theme') || 'dark-theme';
+  body.className = savedTheme;
+
+  if (themeToggleBtn) {
+    themeToggleBtn.setAttribute('aria-checked', savedTheme === 'light-theme' ? 'true' : 'false');
+    themeToggleBtn.addEventListener('click', () => {
+      if (body.classList.contains('dark-theme')) {
+        body.classList.replace('dark-theme', 'light-theme');
+        localStorage.setItem('ashin-portfolio-theme', 'light-theme');
+        themeToggleBtn.setAttribute('aria-checked', 'true');
+      } else {
+        body.classList.replace('light-theme', 'dark-theme');
+        localStorage.setItem('ashin-portfolio-theme', 'dark-theme');
+        themeToggleBtn.setAttribute('aria-checked', 'false');
+      }
+    });
+  }
 
   /* ==========================================================================
      STICKY HEADER & MOB MENU SYSTEM
