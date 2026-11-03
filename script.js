@@ -627,16 +627,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const my = mouse.y;
       const websArray = Array.from(stuckWebs.values());
 
-      // If webs are stuck to cursor, glow hand cursor with Spidey power
-      const hand = document.getElementById('spidey-hand-cursor');
-      if (hand) {
-        if (websArray.length > 0) {
-          hand.style.filter = 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 22px #ff2442)';
-        } else {
-          hand.style.filter = '';
-        }
-      }
-
       // Draw all caught & sticking webs
       websArray.forEach((w) => {
         const dist = Math.hypot(mx - w.anchorX, my - w.anchorY);
@@ -780,90 +770,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     requestAnimationFrame(animateSpideyWebs);
-  }
-
-  /* ==========================================================================
-     HAND AIMING & RELAXING / STRETCHING CURSOR ENGINE
-     ========================================================================== */
-  const handCursor = document.getElementById('spidey-hand-cursor');
-
-  if (handCursor) {
-    let mouseX = -200;
-    let mouseY = -200;
-    let currentX = -200;
-    let currentY = -200;
-    let idleTimer = null;
-    const IDLE_DELAY = 1200; // 1.2s idle triggers relaxed stretching pose
-
-    // Switch to relaxed stretching pose
-    const triggerRelaxMode = () => {
-      handCursor.classList.remove('state-aiming');
-      handCursor.classList.add('state-relaxing');
-    };
-
-    // Switch to active aiming pose
-    const triggerAimMode = () => {
-      handCursor.classList.remove('state-relaxing');
-      handCursor.classList.add('state-aiming');
-    };
-
-    window.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-
-      handCursor.style.opacity = '1';
-
-      // Moving -> Actively aiming with one finger
-      triggerAimMode();
-
-      // Reset idle timer for relaxing / stretching
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
-        triggerRelaxMode();
-      }, IDLE_DELAY);
-    });
-
-    window.addEventListener('mouseleave', () => {
-      handCursor.style.opacity = '0';
-      clearTimeout(idleTimer);
-    });
-
-    // Smooth and responsive cursor movement
-    const updateHandCursor = () => {
-      currentX += (mouseX - currentX) * 0.65;
-      currentY += (mouseY - currentY) * 0.65;
-
-      // Position the fingertip right at the mouse coordinates
-      handCursor.style.left = `${currentX}px`;
-      handCursor.style.top = `${currentY}px`;
-
-      requestAnimationFrame(updateHandCursor);
-    };
-    requestAnimationFrame(updateHandCursor);
-
-    // Hover interactive elements -> Aim even closer / target lock
-    const interactiveTargets = document.querySelectorAll(
-      'a, button, .glass-card, .tag, .tech-pill, .fact-card, .contact-detail-item, .project-feature-item, .ios-theme-toggle'
-    );
-
-    interactiveTargets.forEach((target) => {
-      target.addEventListener('mouseenter', () => {
-        handCursor.classList.add('hovering-target');
-      });
-
-      target.addEventListener('mouseleave', () => {
-        handCursor.classList.remove('hovering-target');
-      });
-    });
-
-    // Click / tap animation
-    window.addEventListener('mousedown', () => {
-      handCursor.classList.add('clicking');
-    });
-
-    window.addEventListener('mouseup', () => {
-      handCursor.classList.remove('clicking');
-    });
   }
 
 });
