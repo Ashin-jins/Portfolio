@@ -175,34 +175,120 @@ document.addEventListener('DOMContentLoaded', () => {
     revealElements.forEach(el => {
       revealObserver.observe(el);
     });
-
-    // Active Section Navbar Highlighting on Scroll
-    const sectionObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const activeId = entry.target.getAttribute('id');
-          
-          navLinks.forEach(link => {
-            if (link.getAttribute('href') === `#${activeId}`) {
-              link.classList.add('active');
-            } else {
-              link.classList.remove('active');
-            }
-          });
-        }
-      });
-    }, {
-      root: null,
-      threshold: 0.4 // trigger when 40% of section is visible
-    });
-
-    sections.forEach(sec => {
-      sectionObserver.observe(sec);
-    });
   } else {
     // Fallback if IntersectionObserver is not supported
     revealElements.forEach(el => el.classList.add('active'));
   }
+
+  /* ==========================================================================
+     ACTIVE NAVIGATION POSITION ANIMATION ENGINE (HEADER PILL & SIDE RUNNER)
+     ========================================================================== */
+  const navList = document.querySelector('.nav-list');
+  const navPill = document.getElementById('nav-active-pill');
+  const sideRunner = document.getElementById('side-nav-runner');
+  const sideNavItems = document.querySelectorAll('.side-nav-item');
+
+  // Move header indicator pill to target link with animated position & width
+  const moveNavPillTo = (targetLink) => {
+    if (!navPill || !navList || !targetLink) return;
+    const linkRect = targetLink.getBoundingClientRect();
+    const listRect = navList.getBoundingClientRect();
+
+    const offsetX = linkRect.left - listRect.left;
+    const width = linkRect.width;
+
+    navPill.style.transform = `translateX(${offsetX}px)`;
+    navPill.style.width = `${width}px`;
+    navPill.style.opacity = '1';
+  };
+
+  // Move side nav runner to target item
+  const moveSideRunnerTo = (targetItem) => {
+    if (!sideRunner || !targetItem) return;
+    const track = targetItem.parentElement;
+    const trackRect = track.getBoundingClientRect();
+    const itemRect = targetItem.getBoundingClientRect();
+
+    const offsetY = itemRect.top - trackRect.top;
+    sideRunner.style.transform = `translate(-50%, ${offsetY}px)`;
+    sideRunner.style.opacity = '1';
+  };
+
+  // Synchronize navigation on scroll dynamically
+  const updateActiveSectionOnScroll = () => {
+    const scrollPos = window.scrollY + window.innerHeight * 0.35;
+    let currentSectionId = '';
+
+    sections.forEach((sec) => {
+      const top = sec.offsetTop;
+      const height = sec.offsetHeight;
+      if (scrollPos >= top && scrollPos < top + height) {
+        currentSectionId = sec.getAttribute('id');
+      }
+    });
+
+    if (!currentSectionId && window.scrollY < 200) {
+      currentSectionId = 'home';
+    }
+
+    if (currentSectionId) {
+      // Update desktop header links & slide pill
+      navLinks.forEach((link) => {
+        if (link.getAttribute('href') === `#${currentSectionId}`) {
+          link.classList.add('active');
+          moveNavPillTo(link);
+        } else {
+          link.classList.remove('active');
+        }
+      });
+
+      // Update mobile links
+      mobileNavLinks.forEach((link) => {
+        if (link.getAttribute('href') === `#${currentSectionId}`) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+
+      // Update side nav dots & slide runner
+      sideNavItems.forEach((item) => {
+        if (item.getAttribute('href') === `#${currentSectionId}`) {
+          item.classList.add('active');
+          moveSideRunnerTo(item);
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+  };
+
+  window.addEventListener('scroll', updateActiveSectionOnScroll, { passive: true });
+  window.addEventListener('resize', () => {
+    const activeLink = document.querySelector('.nav-link.active');
+    if (activeLink) moveNavPillTo(activeLink);
+    const activeSideItem = document.querySelector('.side-nav-item.active');
+    if (activeSideItem) moveSideRunnerTo(activeSideItem);
+  });
+
+  // Smooth hover previews on header nav items
+  navLinks.forEach((link) => {
+    link.addEventListener('mouseenter', () => {
+      moveNavPillTo(link);
+    });
+  });
+
+  if (navList) {
+    navList.addEventListener('mouseleave', () => {
+      const activeLink = document.querySelector('.nav-link.active');
+      if (activeLink) moveNavPillTo(activeLink);
+    });
+  }
+
+  // Initial trigger after DOM ready
+  setTimeout(() => {
+    updateActiveSectionOnScroll();
+  }, 120);
 
   // Direct Contact layout handles link triggers automatically without submission script.
 
