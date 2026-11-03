@@ -92,96 +92,95 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     HERO CONNECTED PARTICLE CONSTELLATION CANVAS
+     GLOBAL CONNECTED PARTICLE CONSTELLATION CANVAS (FULL PAGE THEME)
      ========================================================================== */
-  const heroCanvas = document.getElementById('hero-particle-canvas');
-  if (heroCanvas) {
-    const hCtx = heroCanvas.getContext('2d');
-    let hw, hh;
-    let heroParticles = [];
-    const particleTotal = 60;
+  const siteCanvas = document.getElementById('site-particle-canvas');
+  if (siteCanvas) {
+    const sCtx = siteCanvas.getContext('2d');
+    let sw = siteCanvas.width = window.innerWidth;
+    let sh = siteCanvas.height = window.innerHeight;
+    let siteParticles = [];
+    const count = Math.min(85, Math.max(45, Math.floor((sw * sh) / 18000)));
 
-    const resizeHeroCanvas = () => {
-      hw = heroCanvas.width = heroCanvas.offsetWidth || window.innerWidth;
-      hh = heroCanvas.height = heroCanvas.offsetHeight || window.innerHeight;
+    const resizeSiteCanvas = () => {
+      sw = siteCanvas.width = window.innerWidth;
+      sh = siteCanvas.height = window.innerHeight;
     };
-    resizeHeroCanvas();
-    window.addEventListener('resize', resizeHeroCanvas);
+    window.addEventListener('resize', resizeSiteCanvas);
 
-    class HeroConstellationParticle {
+    class ConstellationNode {
       constructor() {
-        this.x = Math.random() * hw;
-        this.y = Math.random() * hh;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
+        this.x = Math.random() * sw;
+        this.y = Math.random() * sh;
+        this.vx = (Math.random() - 0.5) * 0.45;
+        this.vy = (Math.random() - 0.5) * 0.45;
         this.radius = Math.random() * 1.8 + 0.8;
-        this.alpha = Math.random() * 0.5 + 0.2;
+        this.alpha = Math.random() * 0.5 + 0.25;
       }
       update() {
         this.x += this.vx;
         this.y += this.vy;
-        if (this.x < 0) this.x = hw;
-        if (this.x > hw) this.x = 0;
-        if (this.y < 0) this.y = hh;
-        if (this.y > hh) this.y = 0;
+        if (this.x < 0) this.x = sw;
+        if (this.x > sw) this.x = 0;
+        if (this.y < 0) this.y = sh;
+        if (this.y > sh) this.y = 0;
       }
       draw() {
-        hCtx.beginPath();
-        hCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        hCtx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
-        hCtx.fill();
+        sCtx.beginPath();
+        sCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        sCtx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        sCtx.fill();
       }
     }
 
-    for (let i = 0; i < particleTotal; i++) {
-      heroParticles.push(new HeroConstellationParticle());
+    for (let i = 0; i < count; i++) {
+      siteParticles.push(new ConstellationNode());
     }
 
-    let hMouseX = -1000, hMouseY = -1000;
+    let sMouseX = -1000, sMouseY = -1000;
     window.addEventListener('mousemove', (e) => {
-      const rect = heroCanvas.getBoundingClientRect();
-      hMouseX = e.clientX - rect.left;
-      hMouseY = e.clientY - rect.top;
+      sMouseX = e.clientX;
+      sMouseY = e.clientY;
     });
 
-    const animateHeroConstellation = () => {
-      hCtx.clearRect(0, 0, hw, hh);
+    const animateSiteConstellation = () => {
+      sCtx.clearRect(0, 0, sw, sh);
 
-      // Connect particles close to each other
-      for (let i = 0; i < heroParticles.length; i++) {
-        for (let j = i + 1; j < heroParticles.length; j++) {
-          const dx = heroParticles[i].x - heroParticles[j].x;
-          const dy = heroParticles[i].y - heroParticles[j].y;
+      // Connect particles
+      for (let i = 0; i < siteParticles.length; i++) {
+        for (let j = i + 1; j < siteParticles.length; j++) {
+          const dx = siteParticles[i].x - siteParticles[j].x;
+          const dy = siteParticles[i].y - siteParticles[j].y;
           const dist = Math.hypot(dx, dy);
-          if (dist < 115) {
-            hCtx.beginPath();
-            hCtx.moveTo(heroParticles[i].x, heroParticles[i].y);
-            hCtx.lineTo(heroParticles[j].x, heroParticles[j].y);
-            hCtx.strokeStyle = `rgba(255, 255, 255, ${0.16 * (1 - dist / 115)})`;
-            hCtx.lineWidth = 0.7;
-            hCtx.stroke();
+          if (dist < 120) {
+            sCtx.beginPath();
+            sCtx.moveTo(siteParticles[i].x, siteParticles[i].y);
+            sCtx.lineTo(siteParticles[j].x, siteParticles[j].y);
+            sCtx.strokeStyle = `rgba(255, 255, 255, ${0.16 * (1 - dist / 120)})`;
+            sCtx.lineWidth = 0.7;
+            sCtx.stroke();
           }
         }
       }
 
-      // Draw and animate particles + mouse connect
-      heroParticles.forEach(p => {
+      // Draw particles and connect to mouse
+      siteParticles.forEach((p) => {
         p.update();
         p.draw();
-        const mouseDist = Math.hypot(p.x - hMouseX, p.y - hMouseY);
-        if (mouseDist < 125) {
-          hCtx.beginPath();
-          hCtx.moveTo(p.x, p.y);
-          hCtx.lineTo(hMouseX, hMouseY);
-          hCtx.strokeStyle = `rgba(0, 242, 254, ${0.32 * (1 - mouseDist / 125)})`;
-          hCtx.lineWidth = 0.9;
-          hCtx.stroke();
+        const mDist = Math.hypot(p.x - sMouseX, p.y - sMouseY);
+        if (mDist < 130) {
+          sCtx.beginPath();
+          sCtx.moveTo(p.x, p.y);
+          sCtx.lineTo(sMouseX, sMouseY);
+          sCtx.strokeStyle = `rgba(0, 242, 254, ${0.35 * (1 - mDist / 130)})`;
+          sCtx.lineWidth = 0.9;
+          sCtx.stroke();
         }
       });
 
-      requestAnimationFrame(animateHeroConstellation);
+      requestAnimationFrame(animateSiteConstellation);
     };
-    requestAnimationFrame(animateHeroConstellation);
+    requestAnimationFrame(animateSiteConstellation);
   }
 
   // Navigation & Header
