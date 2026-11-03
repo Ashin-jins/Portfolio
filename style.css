@@ -263,76 +263,320 @@ body.light-theme .aurora-blob {
 }
 
 /* ==========================================================================
-   CUSTOM CURSOR (DESKTOP) - THUNDER PASSING EDITION
+   INTERACTIVE SPIDEY WEB CANVAS & DYNAMIC CURSOR
    ========================================================================== */
-.cursor-dot, .cursor-outline {
+#spidey-web-canvas {
   position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0; /* Above background aurora, under content */
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 0.4s ease;
+}
+
+body.light-theme #spidey-web-canvas {
+  opacity: 0.65;
+}
+
+/* Custom Aiming Reticle Cursor Elements */
+.aiming-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--color-accent-1);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px var(--color-accent-1), 0 0 20px rgba(212, 175, 55, 0.7);
+  transition: width 0.15s ease, height 0.15s ease, background 0.2s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.aiming-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
   pointer-events: none;
   z-index: 9999;
   transform: translate(-50%, -50%);
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+              height 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.2s ease, 
+              border-radius 0.25s ease,
+              background 0.2s ease, 
+              opacity 0.3s ease;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
 }
 
-.cursor-dot {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Reticle Aiming Crosshairs */
+.aiming-cursor-ring .reticle-line {
+  position: absolute;
+  background: var(--color-accent-1);
+  transition: all 0.2s ease;
 }
 
-.lightning-cursor-icon {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 0 6px var(--color-accent-1)) drop-shadow(0 0 12px var(--color-accent-2));
-  animation: lightning-pulse 1.2s infinite ease-in-out;
+.reticle-top {
+  top: -6px;
+  left: 50%;
+  width: 2px;
+  height: 6px;
+  transform: translateX(-50%);
 }
 
-@keyframes lightning-pulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    filter: drop-shadow(0 0 6px var(--color-accent-1)) drop-shadow(0 0 12px var(--color-accent-2));
-  }
-  50% {
-    transform: scale(1.15) rotate(-5deg);
-    filter: drop-shadow(0 0 10px var(--color-accent-1)) drop-shadow(0 0 20px var(--color-accent-2));
-  }
+.reticle-bottom {
+  bottom: -6px;
+  left: 50%;
+  width: 2px;
+  height: 6px;
+  transform: translateX(-50%);
 }
 
-.cursor-outline {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1.5px dashed var(--color-accent-1);
-  box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
-  transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-  animation: rotateOutline 10s infinite linear;
+.reticle-left {
+  top: 50%;
+  left: -6px;
+  width: 6px;
+  height: 2px;
+  transform: translateY(-50%);
 }
 
-@keyframes rotateOutline {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+.reticle-right {
+  top: 50%;
+  right: -6px;
+  width: 6px;
+  height: 2px;
+  transform: translateY(-50%);
 }
 
-/* Spark particle elements */
-.thunder-spark {
-  position: fixed;
-  pointer-events: none;
-  z-index: 9998;
-  width: 3px;
-  height: 16px;
-  border-radius: 2px;
-  transform: translate(-50%, -50%);
-  opacity: 1;
+/* Hover Lock-on State */
+.aiming-cursor-ring.locked-on {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  border: 2px solid var(--color-accent-1);
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.aiming-cursor-ring.locked-on .reticle-line {
+  background: var(--color-accent-3);
   box-shadow: 0 0 8px var(--color-accent-1);
 }
 
-/* Hide on touchscreen devices */
+.aiming-cursor-dot.locked-on {
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  box-shadow: 0 0 12px #ffffff, 0 0 25px var(--color-accent-1);
+}
+
+/* Clicking / Web Shot State */
+.aiming-cursor-ring.clicking {
+  width: 26px;
+  height: 26px;
+  border-color: #ff3b30;
+  box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);
+}
+
+.aiming-cursor-dot.clicking {
+  background: #ff3b30;
+  box-shadow: 0 0 16px #ff3b30;
+}
+
+/* Hide custom cursor on touchscreen devices */
 @media (hover: none) and (pointer: coarse) {
-  .cursor-dot, .cursor-outline, .thunder-spark {
+  .aiming-cursor-dot, .aiming-cursor-ring, #spidey-web-canvas {
     display: none;
   }
+}
+
+/* ==========================================================================
+   INTERACTIVE AIMING EYE WIDGET (CURSORS TRACKER)
+   ========================================================================== */
+.aiming-eye-widget {
+  position: absolute;
+  top: -24px;
+  right: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 8px 14px 10px 14px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), var(--glow-shadow);
+  z-index: 4;
+  cursor: crosshair;
+  transition: var(--transition-bounce);
+}
+
+.aiming-eye-widget:hover {
+  transform: translateY(-4px) scale(1.05);
+  border-color: var(--color-accent-1);
+  box-shadow: 0 14px 35px rgba(212, 175, 55, 0.25);
+}
+
+.eye-outer {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #141417 0%, #08080a 100%);
+  border: 2px solid var(--glass-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 15px rgba(212, 175, 55, 0.2);
+}
+
+body.light-theme .eye-outer {
+  background: linear-gradient(135deg, #f0f0f5 0%, #ffffff 100%);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.eye-hud-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  animation: rotateEyeHud 12s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes rotateEyeHud {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.eye-sclera {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #ffffff 0%, #d8d8e0 70%, #9e9ea8 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Spider / Cyber Gold Iris */
+.eye-iris {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f3e5ab 0%, #d4af37 55%, #7a5806 100%);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+  transition: transform 0.08s ease-out;
+  will-change: transform;
+}
+
+/* Pupil */
+.eye-pupil {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #08080a;
+  position: relative;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.9);
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+.eye-pupil-glint {
+  position: absolute;
+  top: 1.5px;
+  left: 2px;
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 4px #ffffff;
+}
+
+/* Eyelids for natural blink */
+.eyelid {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #0b0b0c;
+  z-index: 5;
+  transition: transform 0.12s ease-in-out;
+}
+
+body.light-theme .eyelid {
+  background: #e5e5ea;
+}
+
+.eyelid-top {
+  top: 0;
+  transform: translateY(-100%);
+}
+
+.eyelid-bottom {
+  bottom: 0;
+  transform: translateY(100%);
+}
+
+.eye-outer.blinking .eyelid-top {
+  transform: translateY(0);
+}
+
+.eye-outer.blinking .eyelid-bottom {
+  transform: translateY(0);
+}
+
+/* Eye status tag */
+.eye-status-label {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-accent-1);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.eye-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34c759;
+  box-shadow: 0 0 6px #34c759;
+  animation: pulse 1.5s infinite;
+}
+
+.aiming-eye-widget.locked .eye-status-dot {
+  background: #ff3b30;
+  box-shadow: 0 0 8px #ff3b30;
+}
+
+.aiming-eye-widget.locked .eye-status-label {
+  color: #ff3b30;
 }
 
 /* ==========================================================================

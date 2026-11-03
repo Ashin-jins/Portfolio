@@ -82,6 +82,18 @@
     <div class="aurora-blob blob-3"></div>
   </div>
 
+  <!-- Interactive Spidey Web Canvas -->
+  <canvas id="spidey-web-canvas"></canvas>
+
+  <!-- Aiming Reticle Custom Cursor Elements -->
+  <div id="spidey-cursor-dot" class="aiming-cursor-dot"></div>
+  <div id="spidey-cursor-ring" class="aiming-cursor-ring">
+    <span class="reticle-line reticle-top"></span>
+    <span class="reticle-line reticle-right"></span>
+    <span class="reticle-line reticle-bottom"></span>
+    <span class="reticle-line reticle-left"></span>
+  </div>
+
   <!-- Scroll Progress Indicator -->
   <div id="scroll-progress-container">
     <div id="scroll-progress-bar"></div>
@@ -197,6 +209,23 @@
             <div class="floating-badge badge-bottom-right element-float-slow">
               <i class="fa-brands fa-python icon-game"></i>
               <span>Python & Web</span>
+            </div>
+
+            <!-- Interactive Cursor-Tracking Aiming Eye -->
+            <div class="aiming-eye-widget" id="aiming-eye" title="Cyber Eye tracking your cursor">
+              <div class="eye-hud-ring"></div>
+              <div class="eye-outer">
+                <div class="eye-sclera">
+                  <div class="eye-iris" id="eye-iris">
+                    <div class="eye-pupil" id="eye-pupil">
+                      <div class="eye-pupil-glint"></div>
+                    </div>
+                  </div>
+                  <div class="eyelid eyelid-top"></div>
+                  <div class="eyelid eyelid-bottom"></div>
+                </div>
+              </div>
+              <span class="eye-status-label"><span class="eye-status-dot"></span> AIMING</span>
             </div>
           </div>
         </div>
