@@ -81,7 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
      ========================================================================== */
   const typedRoleElement = document.getElementById('typed-role');
   if (typedRoleElement) {
-    const roles = ["BCA Student (2nd Sem)", "Aspiring Game Developer", "AI & Data Science Enthusiast"];
+    const roles = [
+      "BCA Student @ Don Bosco College",
+      "Gen AI & Cloud Computing Intern",
+      "Full-Stack Web Developer",
+      "Python & AI Solutions Enthusiast"
+    ];
     let roleIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
