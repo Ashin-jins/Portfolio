@@ -463,148 +463,117 @@ body.light-theme .hand-svg {
 }
 
 /* ==========================================================================
-   UPPER SECTION INDICATOR (WORD-BY-WORD REVEAL ON SCROLL)
+   DYNAMIC NAVIGATION INDEX (ONE-BY-ONE / WORD-BY-WORD REVEAL ON SCROLL)
    ========================================================================== */
-.upper-section-indicator {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 6px 18px;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 4px 20px var(--glass-shadow);
-  opacity: 0;
-  transform: translateY(-8px) scale(0.96);
-  pointer-events: none;
+#desktop-nav {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.upper-section-indicator.visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-.indicator-icon-tag {
-  color: var(--color-accent-1);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
-}
-
-.upper-word-container {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-heading);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
-
-/* Word-by-Word Cascading Reveal Animation */
-.word-reveal {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(14px) rotateX(-50deg);
-  filter: blur(3px);
-  animation: wordCascadeIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  color: var(--text-primary);
-}
-
-.word-reveal:nth-child(even) {
-  color: var(--color-accent-3);
-}
-
-@keyframes wordCascadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(14px) rotateX(-50deg);
-    filter: blur(3px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) rotateX(0deg);
-    filter: blur(0);
-  }
-}
-
-/* Desktop Nav: Hidden / Clean on Home Page, Reveals on Scroll */
-#desktop-nav {
-  opacity: 0;
-  transform: translateY(-8px) scale(0.96);
-  pointer-events: none;
-  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-#desktop-nav.nav-visible-scrolled {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-/* Navigation Links with Animated Sliding Pill */
 .nav-pill-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
+  gap: 6px;
+  background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  padding: 4px 6px;
+  padding: 4px 8px 4px 12px;
   border-radius: 30px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px var(--glass-shadow);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body.light-theme .nav-pill-wrapper {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.nav-active-pill {
-  position: absolute;
-  top: 4px;
-  left: 0;
-  height: calc(100% - 8px);
-  background: rgba(212, 175, 55, 0.16);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  border-radius: 20px;
-  pointer-events: none;
-  z-index: 1;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
-              width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.25s ease;
-  box-shadow: 0 0 16px rgba(212, 175, 55, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.25);
-  opacity: 0;
-}
-
-body.light-theme .nav-active-pill {
-  background: rgba(212, 175, 55, 0.18);
-  border-color: rgba(184, 134, 11, 0.45);
+.nav-compass-icon {
+  color: var(--color-accent-1);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 4px;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
 }
 
 .nav-list {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 3px;
   position: relative;
   z-index: 2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Nav Item: Hidden until scrolled down to */
+.nav-item {
+  display: none;
+  opacity: 0;
+  transform: translateX(-8px) scale(0.92);
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+/* Nav Item Revealed: Visible when reached / scrolled down to */
+.nav-item.revealed {
+  display: inline-flex;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+/* Word-by-Word cascading entrance when a new item appears */
+.nav-item.animating-reveal {
+  animation: navItemRevealPop 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes navItemRevealPop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.88);
+    filter: blur(3px);
+  }
+  60% {
+    filter: blur(0);
+    transform: translateY(-2px) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.nav-word-text {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .nav-link {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--text-secondary);
-  padding: 7px 15px;
+  padding: 6px 14px;
   border-radius: 20px;
   position: relative;
   transition: color 0.3s ease, transform 0.2s ease;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   white-space: nowrap;
 }
 
 .nav-link::after {
-  display: none; /* Replaced by the animated floating pill */
+  display: none;
 }
 
 .nav-link:hover {
@@ -612,9 +581,32 @@ body.light-theme .nav-active-pill {
 }
 
 .nav-link.active {
-  color: var(--color-accent-3);
-  font-weight: 600;
-  text-shadow: 0 0 10px rgba(212, 175, 55, 0.45);
+  color: var(--color-accent-1);
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+/* Animated Active Floating Pill */
+.nav-active-pill {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: calc(100% - 8px);
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), 
+              width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  opacity: 0;
+}
+
+body.light-theme .nav-active-pill {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: rgba(184, 134, 11, 0.45);
 }
 
 body.light-theme .nav-link.active {

@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     ACTIVE NAVIGATION POSITION & UPPER WORD-BY-WORD REVEAL ENGINE
+     ACTIVE NAVIGATION POSITION & ONE-BY-ONE WORD REVEAL ENGINE
      ========================================================================== */
   const navList = document.querySelector('.nav-list');
   const navPill = document.getElementById('nav-active-pill');
@@ -189,62 +189,90 @@ document.addEventListener('DOMContentLoaded', () => {
   const sideNavItems = document.querySelectorAll('.side-nav-item');
   const desktopNav = document.getElementById('desktop-nav');
   const sideNav = document.getElementById('side-nav-index');
-  const upperIndicator = document.getElementById('upper-section-indicator');
-  const upperWordContainer = document.getElementById('upper-word-container');
 
-  // Human-readable titles for word-by-word reveal
-  const sectionTitles = {
-    home: "",
-    about: "About Me",
-    experience: "Experience & Internships",
-    projects: "Technical Projects",
-    skills: "Technical Skills",
-    certifications: "Certifications & Training",
-    contact: "Get In Touch"
-  };
+  const orderedSections = ['home', 'about', 'experience', 'projects', 'skills', 'certifications', 'contact'];
+  let maxRevealedIdx = 0; // Starts at 0 (Home only)
 
-  let currentRenderedSection = null;
-
-  // Render upper section name word by word with cascading animation
-  const renderUpperSectionWordByWord = (sectionId) => {
-    if (sectionId === currentRenderedSection) return;
-    currentRenderedSection = sectionId;
-
-    if (sectionId === 'home' || !sectionId) {
-      // On Home Page: Keep upper nav clean & minimal (don't show full nav items on home)
-      if (upperIndicator) upperIndicator.classList.remove('visible');
-      if (desktopNav) desktopNav.classList.remove('nav-visible-scrolled');
-      if (sideNav) sideNav.classList.remove('visible');
-      return;
-    }
-
-    // Scrolled into sections (About, Experience, etc.): Reveal upper indicator & nav items
-    if (upperIndicator) upperIndicator.classList.add('visible');
-    if (desktopNav) desktopNav.classList.add('nav-visible-scrolled');
-    if (sideNav) sideNav.classList.add('visible');
-
-    const titleText = sectionTitles[sectionId] || sectionId;
-    const words = titleText.split(" ");
-
-    if (upperWordContainer) {
-      upperWordContainer.innerHTML = '';
-      words.forEach((word, index) => {
-        const span = document.createElement('span');
-        span.className = 'word-reveal';
-        span.textContent = word;
-        span.style.animationDelay = `${index * 0.12}s`;
-        upperWordContainer.appendChild(span);
+  // Cascading letter/word-by-word entrance animation for newly revealed items
+  const animateNavWordIn = (wordSpan) => {
+    if (!wordSpan || wordSpan.dataset.animated) return;
+    wordSpan.dataset.animated = 'true';
+    const text = wordSpan.textContent.trim();
+    wordSpan.innerHTML = '';
+    text.split('').forEach((char, i) => {
+      const charSpan = document.createElement('span');
+      charSpan.textContent = char === ' ' ? '\u00A0' : char;
+      charSpan.style.display = 'inline-block';
+      charSpan.style.opacity = '0';
+      charSpan.style.transform = 'translateY(10px) rotateX(-45deg)';
+      charSpan.style.filter = 'blur(2px)';
+      charSpan.style.transition = `all 0.36s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.04}s`;
+      wordSpan.appendChild(charSpan);
+      requestAnimationFrame(() => {
+        charSpan.style.opacity = '1';
+        charSpan.style.transform = 'translateY(0) rotateX(0deg)';
+        charSpan.style.filter = 'blur(0)';
       });
+    });
+  };
+
+  // Reveal navigation items for sections already scrolled down to
+  const revealNavItemsUpTo = (targetIdx) => {
+    orderedSections.forEach((secId, i) => {
+      const navItem = document.querySelector(`.nav-item[data-section="${secId}"]`);
+      const sideItem = document.querySelector(`.side-nav-item[data-section="${secId}"]`);
+
+      if (i <= targetIdx) {
+        if (navItem && !navItem.classList.contains('revealed')) {
+          navItem.classList.add('revealed');
+          navItem.classList.add('animating-reveal');
+          const word = navItem.querySelector('.nav-word-text');
+          animateNavWordIn(word);
+        }
+        if (sideItem) {
+          sideItem.style.display = 'flex';
+          sideItem.style.opacity = '1';
+        }
+      } else {
+        if (navItem) {
+          navItem.classList.remove('revealed');
+          navItem.classList.remove('animating-reveal');
+          const word = navItem.querySelector('.nav-word-text');
+          if (word && word.dataset.animated) {
+            delete word.dataset.animated;
+            word.textContent = secId.charAt(0).toUpperCase() + secId.slice(1);
+          }
+        }
+        if (sideItem) {
+          sideItem.style.display = 'none';
+          sideItem.style.opacity = '0';
+        }
+      }
+    });
+
+    if (sideNav) {
+      if (targetIdx > 0) {
+        sideNav.classList.add('visible');
+      } else {
+        sideNav.classList.remove('visible');
+      }
     }
   };
+
+  // Initial setup: Home is revealed with animated letters
+  const homeWord = document.querySelector('.nav-item[data-section="home"] .nav-word-text');
+  if (homeWord) animateNavWordIn(homeWord);
+  revealNavItemsUpTo(0);
 
   // Move header indicator pill to target link with animated position & width
   const moveNavPillTo = (targetLink) => {
-    if (!navPill || !navList || !targetLink) return;
+    if (!navPill || !targetLink) return;
+    const wrapper = targetLink.closest('.nav-pill-wrapper');
+    if (!wrapper) return;
     const linkRect = targetLink.getBoundingClientRect();
-    const listRect = navList.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
 
-    const offsetX = linkRect.left - listRect.left;
+    const offsetX = linkRect.left - wrapperRect.left;
     const width = linkRect.width;
 
     navPill.style.transform = `translateX(${offsetX}px)`;
@@ -267,22 +295,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // Synchronize navigation on scroll dynamically
   const updateActiveSectionOnScroll = () => {
     const scrollPos = window.scrollY + window.innerHeight * 0.35;
-    let currentSectionId = '';
+    let currentSectionId = 'home';
+    let highestScrolledIdx = 0;
 
-    sections.forEach((sec) => {
+    orderedSections.forEach((secId, idx) => {
+      const sec = document.getElementById(secId);
+      if (!sec) return;
       const top = sec.offsetTop;
       const height = sec.offsetHeight;
+
+      // Section entered viewport -> user has scrolled down to it
+      if (window.scrollY + window.innerHeight * 0.55 >= top) {
+        if (idx > highestScrolledIdx) {
+          highestScrolledIdx = idx;
+        }
+      }
+
       if (scrollPos >= top && scrollPos < top + height) {
-        currentSectionId = sec.getAttribute('id');
+        currentSectionId = secId;
       }
     });
 
-    if (!currentSectionId && window.scrollY < 200) {
+    if (window.scrollY < 120) {
       currentSectionId = 'home';
+      highestScrolledIdx = 0;
     }
 
-    // Trigger upper word-by-word reveal & home visibility state
-    renderUpperSectionWordByWord(currentSectionId);
+    if (highestScrolledIdx > maxRevealedIdx) {
+      maxRevealedIdx = highestScrolledIdx;
+    }
+
+    // Reveal items that have already been scrolled down to
+    revealNavItemsUpTo(maxRevealedIdx);
 
     if (currentSectionId) {
       // Update desktop header links & slide pill
