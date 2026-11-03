@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Direct Contact layout handles link triggers automatically without submission script.
 
   /* ==========================================================================
-     INTERACTIVE SPIDEY WEB CANVAS ENGINE
+     INTERACTIVE SPIDEY WEB EDGE-CATCH & STICK ENGINE
      ========================================================================== */
   const canvas = document.getElementById('spidey-web-canvas');
   if (canvas) {
@@ -301,179 +301,388 @@ document.addEventListener('DOMContentLoaded', () => {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    // Mouse coordinates & state
+    // Mouse coordinates & movement tracking
     const mouse = {
-      x: null,
-      y: null,
-      radius: 190, // Connection threshold to cursor
+      x: -500,
+      y: -500,
+      prevX: -500,
+      prevY: -500,
+      speed: 0,
       active: false
     };
 
-    // Responsive node count
-    const isMobile = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-    const nodeCount = isMobile ? 25 : Math.min(75, Math.floor((width * height) / 18000));
-    const nodes = [];
+    // Sticking & Catching Thresholds
+    const EDGE_CATCH_DIST = 160;   // Distance from viewport edge to trigger catch
+    const CORNER_CATCH_DIST = 240; // Distance from corner to trigger corner net
+    const MAX_STRETCH_DIST = 380;  // Maximum distance before web snaps/releases
+    const CARD_CATCH_DIST = 75;    // Distance from card borders to catch web
+    const CARD_MAX_STRETCH = 260;  // Card web max stretch
 
-    class WebNode {
-      constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.7;
-        this.vy = (Math.random() - 0.5) * 0.7;
-        this.baseRadius = Math.random() * 1.8 + 1.2;
-        this.radius = this.baseRadius;
-      }
+    // Active stuck webs: Map<id, StuckWeb>
+    const stuckWebs = new Map();
+    const snapParticles = [];
 
-      update() {
-        // Bounce off canvas boundaries
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
-
-        // Interaction with cursor (tensile pull like a spider web)
-        if (mouse.active && mouse.x !== null) {
-          const dx = mouse.x - this.x;
-          const dy = mouse.y - this.y;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist < mouse.radius) {
-            const pullForce = (mouse.radius - dist) / mouse.radius;
-            this.x += (dx / dist) * pullForce * 1.8;
-            this.y += (dy / dist) * pullForce * 1.8;
-            this.radius = this.baseRadius * 1.4;
-          } else {
-            this.radius = this.baseRadius;
-          }
+    // Query interactive card targets
+    let cachedCardRects = [];
+    const refreshCardRects = () => {
+      const cards = document.querySelectorAll('.glass-card, .info-card, .project-card, .cert-card, .fact-card');
+      cachedCardRects = [];
+      cards.forEach((card, index) => {
+        const r = card.getBoundingClientRect();
+        // Only include cards currently visible in viewport
+        if (r.bottom > 0 && r.top < height && r.right > 0 && r.left < width) {
+          cachedCardRects.push({
+            id: `card-${index}`,
+            left: r.left,
+            top: r.top,
+            right: r.right,
+            bottom: r.bottom,
+            width: r.width,
+            height: r.height
+          });
         }
+      });
+    };
 
-        this.x += this.vx;
-        this.y += this.vy;
-      }
-
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.7)';
-        ctx.shadowColor = 'rgba(212, 175, 55, 0.5)';
-        ctx.shadowBlur = 6;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    }
-
-    // Initialize nodes
-    for (let i = 0; i < nodeCount; i++) {
-      nodes.push(new WebNode());
-    }
-
-    // Burst Web Strike particles on click
-    let webBursts = [];
-    window.addEventListener('click', (e) => {
-      for (let i = 0; i < 12; i++) {
-        const angle = ((Math.PI * 2) / 12) * i + Math.random() * 0.2;
-        webBursts.push({
-          x: e.clientX,
-          y: e.clientY,
-          vx: Math.cos(angle) * (Math.random() * 6 + 4),
-          vy: Math.sin(angle) * (Math.random() * 6 + 4),
-          life: 1.0,
-          decay: 0.035
-        });
-      }
+    refreshCardRects();
+    window.addEventListener('scroll', refreshCardRects, { passive: true });
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      refreshCardRects();
     });
 
+    // Check & update stuck webs from screen edges & card borders
+    const evaluateEdgeWebs = () => {
+      if (!mouse.active || mouse.x < 0 || mouse.y < 0) {
+        stuckWebs.clear();
+        return;
+      }
+
+      const mx = mouse.x;
+      const my = mouse.y;
+
+      // 1. LEFT SCREEN EDGE
+      const dLeft = mx;
+      if (dLeft < EDGE_CATCH_DIST && !stuckWebs.has('edge-left')) {
+        stuckWebs.set('edge-left', {
+          id: 'edge-left',
+          anchorX: 0,
+          anchorY: my,
+          normalX: 1,
+          normalY: 0,
+          maxDist: MAX_STRETCH_DIST,
+          born: Date.now()
+        });
+      }
+
+      // 2. RIGHT SCREEN EDGE
+      const dRight = width - mx;
+      if (dRight < EDGE_CATCH_DIST && !stuckWebs.has('edge-right')) {
+        stuckWebs.set('edge-right', {
+          id: 'edge-right',
+          anchorX: width,
+          anchorY: my,
+          normalX: -1,
+          normalY: 0,
+          maxDist: MAX_STRETCH_DIST,
+          born: Date.now()
+        });
+      }
+
+      // 3. TOP SCREEN EDGE
+      const dTop = my;
+      if (dTop < EDGE_CATCH_DIST && !stuckWebs.has('edge-top')) {
+        stuckWebs.set('edge-top', {
+          id: 'edge-top',
+          anchorX: mx,
+          anchorY: 0,
+          normalX: 0,
+          normalY: 1,
+          maxDist: MAX_STRETCH_DIST,
+          born: Date.now()
+        });
+      }
+
+      // 4. BOTTOM SCREEN EDGE
+      const dBottom = height - my;
+      if (dBottom < EDGE_CATCH_DIST && !stuckWebs.has('edge-bottom')) {
+        stuckWebs.set('edge-bottom', {
+          id: 'edge-bottom',
+          anchorX: mx,
+          anchorY: height,
+          normalX: 0,
+          normalY: -1,
+          maxDist: MAX_STRETCH_DIST,
+          born: Date.now()
+        });
+      }
+
+      // 5. CORNERS (Classic Spidey Corner Web Catch)
+      const corners = [
+        { id: 'corner-tl', x: 0, y: 0, normalX: 0.7, normalY: 0.7 },
+        { id: 'corner-tr', x: width, y: 0, normalX: -0.7, normalY: 0.7 },
+        { id: 'corner-bl', x: 0, y: height, normalX: 0.7, normalY: -0.7 },
+        { id: 'corner-br', x: width, y: height, normalX: -0.7, normalY: -0.7 }
+      ];
+
+      corners.forEach((c) => {
+        const dCorner = Math.hypot(mx - c.x, my - c.y);
+        if (dCorner < CORNER_CATCH_DIST && !stuckWebs.has(c.id)) {
+          stuckWebs.set(c.id, {
+            id: c.id,
+            anchorX: c.x,
+            anchorY: c.y,
+            normalX: c.normalX,
+            normalY: c.normalY,
+            isCorner: true,
+            maxDist: MAX_STRETCH_DIST + 40,
+            born: Date.now()
+          });
+        }
+      });
+
+      // 6. CARD BORDERS & EDGES
+      cachedCardRects.forEach((c) => {
+        // Find closest point on card perimeter
+        const clampX = Math.max(c.left, Math.min(mx, c.right));
+        const clampY = Math.max(c.top, Math.min(my, c.bottom));
+        const dist = Math.hypot(mx - clampX, my - clampY);
+
+        // If outside card and close to perimeter
+        const isInside = mx >= c.left && mx <= c.right && my >= c.top && my <= c.bottom;
+        if (!isInside && dist < CARD_CATCH_DIST && !stuckWebs.has(c.id)) {
+          // Compute normal pointing out of card
+          const nx = (clampX === c.left ? -1 : clampX === c.right ? 1 : 0);
+          const ny = (clampY === c.top ? -1 : clampY === c.bottom ? 1 : 0);
+
+          stuckWebs.set(c.id, {
+            id: c.id,
+            anchorX: clampX,
+            anchorY: clampY,
+            normalX: nx,
+            normalY: ny,
+            maxDist: CARD_MAX_STRETCH,
+            born: Date.now()
+          });
+        }
+      });
+
+      // 7. EVALUATE STRETCH & SNAP
+      stuckWebs.forEach((w, id) => {
+        const dist = Math.hypot(mx - w.anchorX, my - w.anchorY);
+        // If pulled too far, the web snaps with a burst of silk particles!
+        if (dist > w.maxDist) {
+          // Spawn snap particles
+          for (let i = 0; i < 7; i++) {
+            const angle = Math.atan2(w.anchorY - my, w.anchorX - mx) + (Math.random() - 0.5) * 0.8;
+            snapParticles.push({
+              x: mx,
+              y: my,
+              vx: Math.cos(angle) * (Math.random() * 5 + 3),
+              vy: Math.sin(angle) * (Math.random() * 5 + 3),
+              life: 1.0,
+              decay: 0.05
+            });
+          }
+          stuckWebs.delete(id);
+        }
+      });
+    };
+
     window.addEventListener('mousemove', (e) => {
+      mouse.prevX = mouse.x;
+      mouse.prevY = mouse.y;
       mouse.x = e.clientX;
       mouse.y = e.clientY;
+      mouse.speed = Math.hypot(mouse.x - mouse.prevX, mouse.y - mouse.prevY);
       mouse.active = true;
+      evaluateEdgeWebs();
     });
 
     window.addEventListener('mouseleave', () => {
       mouse.active = false;
+      stuckWebs.clear();
     });
 
-    window.addEventListener('resize', () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    // Web Strike blast on click
+    window.addEventListener('click', (e) => {
+      for (let i = 0; i < 14; i++) {
+        const angle = ((Math.PI * 2) / 14) * i + Math.random() * 0.15;
+        snapParticles.push({
+          x: e.clientX,
+          y: e.clientY,
+          vx: Math.cos(angle) * (Math.random() * 7 + 4),
+          vy: Math.sin(angle) * (Math.random() * 7 + 4),
+          life: 1.0,
+          decay: 0.04
+        });
+      }
     });
 
     // Main animation loop
-    const animateWeb = () => {
+    let animTime = 0;
+    const animateSpideyWebs = () => {
+      animTime += 0.03;
       ctx.clearRect(0, 0, width, height);
 
-      // Draw web links between nodes
-      const maxConnectDist = 120;
-      for (let i = 0; i < nodes.length; i++) {
-        nodes[i].update();
-        nodes[i].draw();
+      const mx = mouse.x;
+      const my = mouse.y;
+      const websArray = Array.from(stuckWebs.values());
 
-        for (let j = i + 1; j < nodes.length; j++) {
-          const dx = nodes[i].x - nodes[j].x;
-          const dy = nodes[i].y - nodes[j].y;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist < maxConnectDist) {
-            const alpha = (1 - dist / maxConnectDist) * 0.25;
-            ctx.beginPath();
-            ctx.moveTo(nodes[i].x, nodes[i].y);
-            ctx.lineTo(nodes[j].x, nodes[j].y);
-            ctx.strokeStyle = `rgba(212, 175, 55, ${alpha})`;
-            ctx.lineWidth = 0.8;
-            ctx.stroke();
-          }
-        }
-
-        // Draw Spidey silk threads connecting to cursor!
-        if (mouse.active && mouse.x !== null) {
-          const dx = mouse.x - nodes[i].x;
-          const dy = mouse.y - nodes[i].y;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist < mouse.radius) {
-            const alpha = (1 - dist / mouse.radius) * 0.85;
-            ctx.beginPath();
-            ctx.moveTo(nodes[i].x, nodes[i].y);
-            // Dynamic curve / tension towards cursor
-            const midX = (nodes[i].x + mouse.x) / 2 + (Math.random() - 0.5) * 4;
-            const midY = (nodes[i].y + mouse.y) / 2 + (Math.random() - 0.5) * 4;
-            ctx.quadraticCurveTo(midX, midY, mouse.x, mouse.y);
-            ctx.strokeStyle = `rgba(212, 175, 55, ${alpha})`;
-            ctx.lineWidth = (1 - dist / mouse.radius) * 2.2 + 0.5;
-            ctx.shadowColor = 'rgba(212, 175, 55, 0.8)';
-            ctx.shadowBlur = 8;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            // Small glowing dewdrop on web connection
-            ctx.beginPath();
-            ctx.arc(midX, midY, 1.8, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-            ctx.fill();
-          }
+      // If webs are stuck, signal cursor ring to pulse
+      const ring = document.getElementById('spidey-cursor-ring');
+      if (ring) {
+        if (websArray.length > 0) {
+          ring.style.boxShadow = '0 0 22px rgba(255, 255, 255, 0.9), 0 0 35px var(--color-accent-1)';
+        } else {
+          ring.style.boxShadow = '';
         }
       }
 
-      // Draw active web strike bursts
-      for (let i = webBursts.length - 1; i >= 0; i--) {
-        const b = webBursts[i];
+      // Draw all caught & sticking webs
+      websArray.forEach((w) => {
+        const dist = Math.hypot(mx - w.anchorX, my - w.anchorY);
+        const tension = Math.min(1, dist / w.maxDist);
+        // Tension sag: when loose, it curves; when taut, it straightens with vibration
+        const sag = (1 - tension) * 18 + Math.sin(animTime * 12 + dist) * (tension * 2);
+        const midX = (w.anchorX + mx) / 2 + w.normalX * sag;
+        const midY = (w.anchorY + my) / 2 + w.normalY * sag;
+
+        // 1. Draw Edge Anchor Base (Spider-Web Foot sticking to edge)
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(b.x, b.y);
-        b.x += b.vx;
-        b.y += b.vy;
-        ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${b.life})`;
-        ctx.lineWidth = b.life * 2;
+        ctx.arc(w.anchorX, w.anchorY, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(212, 175, 55, 0.9)';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+
+        // 2-3 Triangular Anchor Root Threads gripping the edge
+        const perpX = -w.normalY * 16;
+        const perpY = w.normalX * 16;
+        ctx.beginPath();
+        ctx.moveTo(w.anchorX + perpX, w.anchorY + perpY);
+        ctx.lineTo(w.anchorX + w.normalX * 8, w.anchorY + w.normalY * 8);
+        ctx.lineTo(w.anchorX - perpX, w.anchorY - perpY);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. Main Tensile Silk Web Cord (Outer Glow + Crisp White Core)
+        ctx.save();
+        // Pass A: Luminous Golden Silk Glow
+        ctx.beginPath();
+        ctx.moveTo(w.anchorX, w.anchorY);
+        ctx.quadraticCurveTo(midX, midY, mx, my);
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.55)';
+        ctx.lineWidth = 3.8 * (1 - tension * 0.4);
+        ctx.shadowColor = 'rgba(212, 175, 55, 0.85)';
+        ctx.shadowBlur = 14;
         ctx.stroke();
 
-        b.life -= b.decay;
-        if (b.life <= 0) {
-          webBursts.splice(i, 1);
+        // Pass B: Bright White Silk Core Cord
+        ctx.beginPath();
+        ctx.moveTo(w.anchorX, w.anchorY);
+        ctx.quadraticCurveTo(midX, midY, mx, my);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+
+        // Pass C: Dewdrop sparkle at midpoint
+        ctx.beginPath();
+        ctx.arc(midX, midY, 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 3. Draw Spider-Web Cross-Lattices (Cobweb web fans between multiple caught edges!)
+      if (websArray.length >= 2) {
+        for (let i = 0; i < websArray.length; i++) {
+          for (let j = i + 1; j < websArray.length; j++) {
+            const w1 = websArray[i];
+            const w2 = websArray[j];
+            const dBetween = Math.hypot(w1.anchorX - w2.anchorX, w1.anchorY - w2.anchorY);
+
+            // Connect if anchors are adjacent or corner
+            if (dBetween < 600) {
+              const rungs = [0.35, 0.58, 0.78];
+              rungs.forEach((t) => {
+                const p1x = w1.anchorX + (mx - w1.anchorX) * t;
+                const p1y = w1.anchorY + (my - w1.anchorY) * t;
+                const p2x = w2.anchorX + (mx - w2.anchorX) * t;
+                const p2y = w2.anchorY + (my - w2.anchorY) * t;
+
+                // Parabolic sag towards the cursor
+                const bow = 10 * (1 - t);
+                const crossMidX = (p1x + p2x) / 2 + (mx - (p1x + p2x) / 2) * 0.25;
+                const crossMidY = (p1y + p2y) / 2 + (my - (p1y + p2y) / 2) * 0.25;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(p1x, p1y);
+                ctx.quadraticCurveTo(crossMidX, crossMidY, p2x, p2y);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+                ctx.lineWidth = 1.0;
+                ctx.shadowColor = 'rgba(212, 175, 55, 0.5)';
+                ctx.shadowBlur = 6;
+                ctx.stroke();
+                ctx.restore();
+              });
+            }
+          }
         }
       }
 
-      requestAnimationFrame(animateWeb);
+      // 4. Draw Sticky Web Filaments wrapped around the cursor pointer!
+      if (websArray.length > 0) {
+        ctx.save();
+        ctx.beginPath();
+        for (let a = 0; a < 4; a++) {
+          const ang = a * (Math.PI / 2) + animTime * 3;
+          const fx = mx + Math.cos(ang) * 9;
+          const fy = my + Math.sin(ang) * 9;
+          ctx.moveTo(mx, my);
+          ctx.lineTo(fx, fy);
+        }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 1.2;
+        ctx.shadowColor = 'rgba(212, 175, 55, 0.9)';
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 5. Draw Snap Particles & Web Strike sparks
+      for (let i = snapParticles.length - 1; i >= 0; i--) {
+        const p = snapParticles[i];
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        p.x += p.vx;
+        p.y += p.vy;
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${p.life})`;
+        ctx.lineWidth = p.life * 2.2;
+        ctx.shadowColor = 'rgba(212, 175, 55, 0.8)';
+        ctx.shadowBlur = 6;
+        ctx.stroke();
+        ctx.restore();
+
+        p.life -= p.decay;
+        if (p.life <= 0) {
+          snapParticles.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(animateSpideyWebs);
     };
 
-    requestAnimationFrame(animateWeb);
+    requestAnimationFrame(animateSpideyWebs);
   }
 
   /* ==========================================================================
