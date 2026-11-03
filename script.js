@@ -583,11 +583,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const my = mouse.y;
       const websArray = Array.from(stuckWebs.values());
 
-      // If webs are stuck to cursor, glow hand cursor
+      // If webs are stuck to cursor, glow hand cursor with Spidey power
       const hand = document.getElementById('spidey-hand-cursor');
       if (hand) {
         if (websArray.length > 0) {
-          hand.style.filter = 'drop-shadow(0 0 16px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px var(--color-accent-1))';
+          hand.style.filter = 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 22px #ff2442)';
         } else {
           hand.style.filter = '';
         }
@@ -784,10 +784,10 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(idleTimer);
     });
 
-    // Smooth cursor movement interpolation
+    // Smooth and responsive cursor movement
     const updateHandCursor = () => {
-      currentX += (mouseX - currentX) * 0.35;
-      currentY += (mouseY - currentY) * 0.35;
+      currentX += (mouseX - currentX) * 0.65;
+      currentY += (mouseY - currentY) * 0.65;
 
       // Position the fingertip right at the mouse coordinates
       handCursor.style.left = `${currentX}px`;

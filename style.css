@@ -281,37 +281,29 @@ body.light-theme #spidey-web-canvas {
   opacity: 0.85;
 }
 
+/* Hide default system cursor on desktop so the custom hand cursor is exclusive */
+@media (hover: hover) and (pointer: fine) {
+  html, body, *, *::before, *::after, a, button, input, textarea, select {
+    cursor: none !important;
+  }
+}
+
 /* ==========================================================================
-   HAND AIMING & RELAXING CUSTOM CURSOR
+   HAND AIMING & RELAXING CUSTOM CURSOR WITH SPIDER-MAN TATTOO
    ========================================================================== */
 .spidey-hand-cursor {
   position: fixed;
   top: 0;
   left: 0;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   pointer-events: none;
   z-index: 10000;
-  /* Active index fingertip hits at exactly (6px, 6px) */
-  transform: translate(-6px, -6px);
-  transition: opacity 0.3s ease;
+  /* Active index fingertip hits at exactly (4px, 4px) */
+  transform: translate(-4px, -4px);
+  transition: opacity 0.25s ease;
   opacity: 0;
   will-change: transform, left, top;
-}
-
-/* Fingertip Aiming Laser Spark */
-.fingertip-spark {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ffffff;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 8px #ffffff, 0 0 16px var(--color-accent-1);
-  transition: all 0.2s ease;
-  z-index: 2;
 }
 
 /* Hand SVGs container */
@@ -319,18 +311,19 @@ body.light-theme #spidey-web-canvas {
   position: absolute;
   top: 0;
   left: 0;
-  width: 44px;
-  height: 44px;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 8px rgba(255, 36, 66, 0.35));
   transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
               transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 4px 4px;
 }
 
 body.light-theme .hand-svg {
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 6px rgba(184, 134, 11, 0.3));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 6px rgba(230, 36, 41, 0.4));
 }
 
-/* State 1: Active Aiming (One Finger Extended) */
+/* State 1: Active Aiming (Index Finger Pointing forward with Spider tattoo) */
 .spidey-hand-cursor.state-aiming .hand-aiming-svg {
   opacity: 1;
   transform: scale(1) rotate(0deg);
@@ -339,19 +332,14 @@ body.light-theme .hand-svg {
 
 .spidey-hand-cursor.state-aiming .hand-relaxing-svg {
   opacity: 0;
-  transform: scale(0.85) rotate(-5deg);
+  transform: scale(0.88) rotate(-6deg);
   visibility: hidden;
-}
-
-.spidey-hand-cursor.state-aiming .fingertip-spark {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
 }
 
 /* State 2: Relaxing / Stretching Hand (When Idle / Not moving) */
 .spidey-hand-cursor.state-relaxing .hand-aiming-svg {
   opacity: 0;
-  transform: scale(0.85) rotate(-5deg);
+  transform: scale(0.88) rotate(-6deg);
   visibility: hidden;
 }
 
@@ -359,50 +347,50 @@ body.light-theme .hand-svg {
   opacity: 1;
   transform: scale(1) rotate(0deg);
   visibility: visible;
-  animation: handStretchBreathing 3s infinite ease-in-out;
+  animation: handStretchBreathing 3.2s infinite ease-in-out;
 }
 
-.spidey-hand-cursor.state-relaxing .fingertip-spark {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.5);
+/* Spider-Man Tattoo Glow Pulse */
+.spidey-tattoo-group {
+  transition: filter 0.3s ease, transform 0.3s ease;
 }
 
-/* Hand Stretching & Relaxing Animation Cycle */
+.spidey-hand-cursor:hover .spidey-tattoo-group,
+.spidey-hand-cursor.hovering-target .spidey-tattoo-group {
+  filter: drop-shadow(0 0 6px #ff2442) drop-shadow(0 0 10px #ff002b);
+}
+
+/* Hand Stretching & Relaxing Animation Cycle when Idle */
 @keyframes handStretchBreathing {
   0% {
     transform: scale(1) rotate(0deg);
-    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 8px rgba(255, 36, 66, 0.35));
   }
-  30% {
-    /* Stretching fingers out wide */
-    transform: scale(1.1) rotate(3deg);
-    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 16px rgba(212, 175, 55, 0.7));
+  35% {
+    /* Stretching fingers out wide and flexing */
+    transform: scale(1.08) rotate(3deg);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 16px rgba(255, 36, 66, 0.7));
   }
-  60% {
-    /* Relaxed gentle flex */
-    transform: scale(1.05) rotate(-2deg);
-    filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
+  70% {
+    /* Soft relaxed breathing posture */
+    transform: scale(1.03) rotate(-2deg);
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 10px rgba(255, 36, 66, 0.45));
   }
   100% {
     transform: scale(1) rotate(0deg);
-    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 8px rgba(255, 36, 66, 0.35));
   }
 }
 
 /* Hovering interactive links & buttons */
 .spidey-hand-cursor.hovering-target .hand-aiming-svg {
-  transform: scale(1.1) rotate(-3deg);
-}
-
-.spidey-hand-cursor.hovering-target .fingertip-spark {
-  background: var(--color-accent-1);
-  box-shadow: 0 0 12px var(--color-accent-1), 0 0 25px rgba(212, 175, 55, 0.8);
-  transform: translate(-50%, -50%) scale(1.4);
+  transform: scale(1.1) rotate(-4deg);
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 14px rgba(255, 36, 66, 0.8));
 }
 
 /* Click / Tap action */
 .spidey-hand-cursor.clicking .hand-aiming-svg {
-  transform: scale(0.9) translate(1px, 1px);
+  transform: scale(0.92) translate(1px, 1px);
 }
 
 /* Hide hand cursor on touchscreens */
