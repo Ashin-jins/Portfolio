@@ -181,12 +181,62 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     ACTIVE NAVIGATION POSITION ANIMATION ENGINE (HEADER PILL & SIDE RUNNER)
+     ACTIVE NAVIGATION POSITION & UPPER WORD-BY-WORD REVEAL ENGINE
      ========================================================================== */
   const navList = document.querySelector('.nav-list');
   const navPill = document.getElementById('nav-active-pill');
   const sideRunner = document.getElementById('side-nav-runner');
   const sideNavItems = document.querySelectorAll('.side-nav-item');
+  const desktopNav = document.getElementById('desktop-nav');
+  const sideNav = document.getElementById('side-nav-index');
+  const upperIndicator = document.getElementById('upper-section-indicator');
+  const upperWordContainer = document.getElementById('upper-word-container');
+
+  // Human-readable titles for word-by-word reveal
+  const sectionTitles = {
+    home: "",
+    about: "About Me",
+    experience: "Experience & Internships",
+    projects: "Technical Projects",
+    skills: "Technical Skills",
+    certifications: "Certifications & Training",
+    contact: "Get In Touch"
+  };
+
+  let currentRenderedSection = null;
+
+  // Render upper section name word by word with cascading animation
+  const renderUpperSectionWordByWord = (sectionId) => {
+    if (sectionId === currentRenderedSection) return;
+    currentRenderedSection = sectionId;
+
+    if (sectionId === 'home' || !sectionId) {
+      // On Home Page: Keep upper nav clean & minimal (don't show full nav items on home)
+      if (upperIndicator) upperIndicator.classList.remove('visible');
+      if (desktopNav) desktopNav.classList.remove('nav-visible-scrolled');
+      if (sideNav) sideNav.classList.remove('visible');
+      return;
+    }
+
+    // Scrolled into sections (About, Experience, etc.): Reveal upper indicator & nav items
+    if (upperIndicator) upperIndicator.classList.add('visible');
+    if (desktopNav) desktopNav.classList.add('nav-visible-scrolled');
+    if (sideNav) sideNav.classList.add('visible');
+
+    const titleText = sectionTitles[sectionId] || sectionId;
+    const words = titleText.split(" ");
+
+    if (upperWordContainer) {
+      upperWordContainer.innerHTML = '';
+      words.forEach((word, index) => {
+        const span = document.createElement('span');
+        span.className = 'word-reveal';
+        span.textContent = word;
+        span.style.animationDelay = `${index * 0.12}s`;
+        upperWordContainer.appendChild(span);
+      });
+    }
+  };
 
   // Move header indicator pill to target link with animated position & width
   const moveNavPillTo = (targetLink) => {
@@ -230,6 +280,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentSectionId && window.scrollY < 200) {
       currentSectionId = 'home';
     }
+
+    // Trigger upper word-by-word reveal & home visibility state
+    renderUpperSectionWordByWord(currentSectionId);
 
     if (currentSectionId) {
       // Update desktop header links & slide pill
@@ -530,13 +583,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const my = mouse.y;
       const websArray = Array.from(stuckWebs.values());
 
-      // If webs are stuck, signal cursor ring to pulse
-      const ring = document.getElementById('spidey-cursor-ring');
-      if (ring) {
+      // If webs are stuck to cursor, glow hand cursor
+      const hand = document.getElementById('spidey-hand-cursor');
+      if (hand) {
         if (websArray.length > 0) {
-          ring.style.boxShadow = '0 0 22px rgba(255, 255, 255, 0.9), 0 0 35px var(--color-accent-1)';
+          hand.style.filter = 'drop-shadow(0 0 16px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px var(--color-accent-1))';
         } else {
-          ring.style.boxShadow = '';
+          hand.style.filter = '';
         }
       }
 
@@ -686,133 +739,86 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     INTERACTIVE AIMING EYE (GAZE & RETICLE TRACKER)
+     HAND AIMING & RELAXING / STRETCHING CURSOR ENGINE
      ========================================================================== */
-  const aimingEye = document.getElementById('aiming-eye');
-  const eyeIris = document.getElementById('eye-iris');
-  const eyeOuter = document.querySelector('.eye-outer');
-  const eyeStatusLabel = document.querySelector('.eye-status-label');
+  const handCursor = document.getElementById('spidey-hand-cursor');
 
-  if (aimingEye && eyeIris) {
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
+  if (handCursor) {
+    let mouseX = -200;
+    let mouseY = -200;
+    let currentX = -200;
+    let currentY = -200;
+    let idleTimer = null;
+    const IDLE_DELAY = 1200; // 1.2s idle triggers relaxed stretching pose
 
-    window.addEventListener('mousemove', (e) => {
-      const rect = aimingEye.getBoundingClientRect();
-      const eyeCenterX = rect.left + rect.width / 2;
-      const eyeCenterY = rect.top + rect.height / 2;
-
-      const deltaX = e.clientX - eyeCenterX;
-      const deltaY = e.clientY - eyeCenterY;
-      const angle = Math.atan2(deltaY, deltaX);
-      const distance = Math.hypot(deltaX, deltaY);
-
-      // Max pupil offset within sclera
-      const maxOffset = 9;
-      const offset = Math.min(maxOffset, distance / 35);
-
-      targetX = Math.cos(angle) * offset;
-      targetY = Math.sin(angle) * offset;
-    });
-
-    // Smooth eye gaze interpolation
-    const updateEyeGaze = () => {
-      currentX += (targetX - currentX) * 0.15;
-      currentY += (targetY - currentY) * 0.15;
-      eyeIris.style.transform = `translate(${currentX}px, ${currentY}px)`;
-      requestAnimationFrame(updateEyeGaze);
+    // Switch to relaxed stretching pose
+    const triggerRelaxMode = () => {
+      handCursor.classList.remove('state-aiming');
+      handCursor.classList.add('state-relaxing');
     };
-    requestAnimationFrame(updateEyeGaze);
 
-    // Natural Eye Blink Loop
-    const triggerBlink = () => {
-      if (eyeOuter) {
-        eyeOuter.classList.add('blinking');
-        setTimeout(() => {
-          eyeOuter.classList.remove('blinking');
-        }, 160);
-      }
-      const nextBlink = Math.random() * 3500 + 3000;
-      setTimeout(triggerBlink, nextBlink);
+    // Switch to active aiming pose
+    const triggerAimMode = () => {
+      handCursor.classList.remove('state-relaxing');
+      handCursor.classList.add('state-aiming');
     };
-    setTimeout(triggerBlink, 3000);
-  }
-
-  /* ==========================================================================
-     AIMING RETICLE CUSTOM CURSOR ENGINE
-     ========================================================================== */
-  const cursorDot = document.getElementById('spidey-cursor-dot');
-  const cursorRing = document.getElementById('spidey-cursor-ring');
-
-  if (cursorDot && cursorRing) {
-    let mouseX = -100;
-    let mouseY = -100;
-    let ringX = -100;
-    let ringY = -100;
 
     window.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
 
-      cursorDot.style.opacity = '1';
-      cursorRing.style.opacity = '1';
-      cursorDot.style.left = `${mouseX}px`;
-      cursorDot.style.top = `${mouseY}px`;
+      handCursor.style.opacity = '1';
+
+      // Moving -> Actively aiming with one finger
+      triggerAimMode();
+
+      // Reset idle timer for relaxing / stretching
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        triggerRelaxMode();
+      }, IDLE_DELAY);
     });
 
     window.addEventListener('mouseleave', () => {
-      cursorDot.style.opacity = '0';
-      cursorRing.style.opacity = '0';
+      handCursor.style.opacity = '0';
+      clearTimeout(idleTimer);
     });
 
-    // Smooth cursor ring lerp
-    const updateCursorRing = () => {
-      ringX += (mouseX - ringX) * 0.22;
-      ringY += (mouseY - ringY) * 0.22;
+    // Smooth cursor movement interpolation
+    const updateHandCursor = () => {
+      currentX += (mouseX - currentX) * 0.35;
+      currentY += (mouseY - currentY) * 0.35;
 
-      cursorRing.style.left = `${ringX}px`;
-      cursorRing.style.top = `${ringY}px`;
+      // Position the fingertip right at the mouse coordinates
+      handCursor.style.left = `${currentX}px`;
+      handCursor.style.top = `${currentY}px`;
 
-      requestAnimationFrame(updateCursorRing);
+      requestAnimationFrame(updateHandCursor);
     };
-    requestAnimationFrame(updateCursorRing);
+    requestAnimationFrame(updateHandCursor);
 
-    // Interactive element lock-on targeting
+    // Hover interactive elements -> Aim even closer / target lock
     const interactiveTargets = document.querySelectorAll(
       'a, button, .glass-card, .tag, .tech-pill, .fact-card, .contact-detail-item, .project-feature-item, .ios-theme-toggle'
     );
 
     interactiveTargets.forEach((target) => {
       target.addEventListener('mouseenter', () => {
-        cursorRing.classList.add('locked-on');
-        cursorDot.classList.add('locked-on');
-        if (aimingEye && eyeStatusLabel) {
-          aimingEye.classList.add('locked');
-          eyeStatusLabel.innerHTML = '<span class="eye-status-dot"></span> LOCKED';
-        }
+        handCursor.classList.add('hovering-target');
       });
 
       target.addEventListener('mouseleave', () => {
-        cursorRing.classList.remove('locked-on');
-        cursorDot.classList.remove('locked-on');
-        if (aimingEye && eyeStatusLabel) {
-          aimingEye.classList.remove('locked');
-          eyeStatusLabel.innerHTML = '<span class="eye-status-dot"></span> AIMING';
-        }
+        handCursor.classList.remove('hovering-target');
       });
     });
 
-    // Click effect (web tension release)
+    // Click / tap animation
     window.addEventListener('mousedown', () => {
-      cursorRing.classList.add('clicking');
-      cursorDot.classList.add('clicking');
+      handCursor.classList.add('clicking');
     });
 
     window.addEventListener('mouseup', () => {
-      cursorRing.classList.remove('clicking');
-      cursorDot.classList.remove('clicking');
+      handCursor.classList.remove('clicking');
     });
   }
 

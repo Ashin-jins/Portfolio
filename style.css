@@ -281,302 +281,135 @@ body.light-theme #spidey-web-canvas {
   opacity: 0.85;
 }
 
-/* Custom Aiming Reticle Cursor Elements */
-.aiming-cursor-dot {
+/* ==========================================================================
+   HAND AIMING & RELAXING CUSTOM CURSOR
+   ========================================================================== */
+.spidey-hand-cursor {
   position: fixed;
   top: 0;
   left: 0;
-  width: 8px;
-  height: 8px;
-  background: var(--color-accent-1);
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   pointer-events: none;
   z-index: 10000;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 10px var(--color-accent-1), 0 0 20px rgba(212, 175, 55, 0.7);
-  transition: width 0.15s ease, height 0.15s ease, background 0.2s ease, opacity 0.3s ease;
+  /* Active index fingertip hits at exactly (6px, 6px) */
+  transform: translate(-6px, -6px);
+  transition: opacity 0.3s ease;
   opacity: 0;
+  will-change: transform, left, top;
 }
 
-.aiming-cursor-ring {
-  position: fixed;
+/* Fingertip Aiming Laser Spark */
+.fingertip-spark {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px #ffffff, 0 0 16px var(--color-accent-1);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+/* Hand SVGs container */
+.hand-svg {
+  position: absolute;
   top: 0;
   left: 0;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(212, 175, 55, 0.45);
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
-              height 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
-              border-color 0.2s ease, 
-              border-radius 0.25s ease,
-              background 0.2s ease, 
-              opacity 0.3s ease;
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.light-theme .hand-svg {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 6px rgba(184, 134, 11, 0.3));
+}
+
+/* State 1: Active Aiming (One Finger Extended) */
+.spidey-hand-cursor.state-aiming .hand-aiming-svg {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  visibility: visible;
+}
+
+.spidey-hand-cursor.state-aiming .hand-relaxing-svg {
   opacity: 0;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+  transform: scale(0.85) rotate(-5deg);
+  visibility: hidden;
 }
 
-/* Reticle Aiming Crosshairs */
-.aiming-cursor-ring .reticle-line {
-  position: absolute;
-  background: var(--color-accent-1);
-  transition: all 0.2s ease;
+.spidey-hand-cursor.state-aiming .fingertip-spark {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
-.reticle-top {
-  top: -6px;
-  left: 50%;
-  width: 2px;
-  height: 6px;
-  transform: translateX(-50%);
+/* State 2: Relaxing / Stretching Hand (When Idle / Not moving) */
+.spidey-hand-cursor.state-relaxing .hand-aiming-svg {
+  opacity: 0;
+  transform: scale(0.85) rotate(-5deg);
+  visibility: hidden;
 }
 
-.reticle-bottom {
-  bottom: -6px;
-  left: 50%;
-  width: 2px;
-  height: 6px;
-  transform: translateX(-50%);
+.spidey-hand-cursor.state-relaxing .hand-relaxing-svg {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  visibility: visible;
+  animation: handStretchBreathing 3s infinite ease-in-out;
 }
 
-.reticle-left {
-  top: 50%;
-  left: -6px;
-  width: 6px;
-  height: 2px;
-  transform: translateY(-50%);
+.spidey-hand-cursor.state-relaxing .fingertip-spark {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
 }
 
-.reticle-right {
-  top: 50%;
-  right: -6px;
-  width: 6px;
-  height: 2px;
-  transform: translateY(-50%);
-}
-
-/* Hover Lock-on State */
-.aiming-cursor-ring.locked-on {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  border: 2px solid var(--color-accent-1);
-  background: rgba(212, 175, 55, 0.08);
-  box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.aiming-cursor-ring.locked-on .reticle-line {
-  background: var(--color-accent-3);
-  box-shadow: 0 0 8px var(--color-accent-1);
-}
-
-.aiming-cursor-dot.locked-on {
-  width: 10px;
-  height: 10px;
-  background: #ffffff;
-  box-shadow: 0 0 12px #ffffff, 0 0 25px var(--color-accent-1);
-}
-
-/* Clicking / Web Shot State */
-.aiming-cursor-ring.clicking {
-  width: 26px;
-  height: 26px;
-  border-color: #ff3b30;
-  box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);
-}
-
-.aiming-cursor-dot.clicking {
-  background: #ff3b30;
-  box-shadow: 0 0 16px #ff3b30;
-}
-
-/* Hide custom cursor on touchscreen devices */
-@media (hover: none) and (pointer: coarse) {
-  .aiming-cursor-dot, .aiming-cursor-ring, #spidey-web-canvas {
-    display: none;
+/* Hand Stretching & Relaxing Animation Cycle */
+@keyframes handStretchBreathing {
+  0% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+  }
+  30% {
+    /* Stretching fingers out wide */
+    transform: scale(1.1) rotate(3deg);
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 16px rgba(212, 175, 55, 0.7));
+  }
+  60% {
+    /* Relaxed gentle flex */
+    transform: scale(1.05) rotate(-2deg);
+    filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
   }
 }
 
-/* ==========================================================================
-   INTERACTIVE AIMING EYE WIDGET (CURSORS TRACKER)
-   ========================================================================== */
-.aiming-eye-widget {
-  position: absolute;
-  top: -24px;
-  right: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 8px 14px 10px 14px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), var(--glow-shadow);
-  z-index: 4;
-  cursor: crosshair;
-  transition: var(--transition-bounce);
+/* Hovering interactive links & buttons */
+.spidey-hand-cursor.hovering-target .hand-aiming-svg {
+  transform: scale(1.1) rotate(-3deg);
 }
 
-.aiming-eye-widget:hover {
-  transform: translateY(-4px) scale(1.05);
-  border-color: var(--color-accent-1);
-  box-shadow: 0 14px 35px rgba(212, 175, 55, 0.25);
+.spidey-hand-cursor.hovering-target .fingertip-spark {
+  background: var(--color-accent-1);
+  box-shadow: 0 0 12px var(--color-accent-1), 0 0 25px rgba(212, 175, 55, 0.8);
+  transform: translate(-50%, -50%) scale(1.4);
 }
 
-.eye-outer {
-  position: relative;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #141417 0%, #08080a 100%);
-  border: 2px solid var(--glass-border);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 15px rgba(212, 175, 55, 0.2);
+/* Click / Tap action */
+.spidey-hand-cursor.clicking .hand-aiming-svg {
+  transform: scale(0.9) translate(1px, 1px);
 }
 
-body.light-theme .eye-outer {
-  background: linear-gradient(135deg, #f0f0f5 0%, #ffffff 100%);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-.eye-hud-ring {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  border-radius: 50%;
-  border: 1px dashed rgba(212, 175, 55, 0.4);
-  animation: rotateEyeHud 12s infinite linear;
-  pointer-events: none;
-}
-
-@keyframes rotateEyeHud {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.eye-sclera {
-  position: relative;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, #ffffff 0%, #d8d8e0 70%, #9e9ea8 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.35);
-}
-
-/* Spider / Cyber Gold Iris */
-.eye-iris {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #f3e5ab 0%, #d4af37 55%, #7a5806 100%);
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
-  transition: transform 0.08s ease-out;
-  will-change: transform;
-}
-
-/* Pupil */
-.eye-pupil {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #08080a;
-  position: relative;
-  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.9);
-  transition: width 0.2s ease, height 0.2s ease;
-}
-
-.eye-pupil-glint {
-  position: absolute;
-  top: 1.5px;
-  left: 2px;
-  width: 3.5px;
-  height: 3.5px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 4px #ffffff;
-}
-
-/* Eyelids for natural blink */
-.eyelid {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 50%;
-  background: #0b0b0c;
-  z-index: 5;
-  transition: transform 0.12s ease-in-out;
-}
-
-body.light-theme .eyelid {
-  background: #e5e5ea;
-}
-
-.eyelid-top {
-  top: 0;
-  transform: translateY(-100%);
-}
-
-.eyelid-bottom {
-  bottom: 0;
-  transform: translateY(100%);
-}
-
-.eye-outer.blinking .eyelid-top {
-  transform: translateY(0);
-}
-
-.eye-outer.blinking .eyelid-bottom {
-  transform: translateY(0);
-}
-
-/* Eye status tag */
-.eye-status-label {
-  font-family: var(--font-heading);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--color-accent-1);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.eye-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #34c759;
-  box-shadow: 0 0 6px #34c759;
-  animation: pulse 1.5s infinite;
-}
-
-.aiming-eye-widget.locked .eye-status-dot {
-  background: #ff3b30;
-  box-shadow: 0 0 8px #ff3b30;
-}
-
-.aiming-eye-widget.locked .eye-status-label {
-  color: #ff3b30;
+/* Hide hand cursor on touchscreens */
+@media (hover: none) and (pointer: coarse) {
+  .spidey-hand-cursor, #spidey-web-canvas {
+    display: none !important;
+  }
 }
 
 /* ==========================================================================
@@ -639,6 +472,90 @@ body.light-theme .eyelid {
 .logo-dot {
   color: var(--color-accent-1);
   text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+
+/* ==========================================================================
+   UPPER SECTION INDICATOR (WORD-BY-WORD REVEAL ON SCROLL)
+   ========================================================================== */
+.upper-section-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 6px 18px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px var(--glass-shadow);
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.upper-section-indicator.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.indicator-icon-tag {
+  color: var(--color-accent-1);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
+}
+
+.upper-word-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* Word-by-Word Cascading Reveal Animation */
+.word-reveal {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(14px) rotateX(-50deg);
+  filter: blur(3px);
+  animation: wordCascadeIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  color: var(--text-primary);
+}
+
+.word-reveal:nth-child(even) {
+  color: var(--color-accent-3);
+}
+
+@keyframes wordCascadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) rotateX(-50deg);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+    filter: blur(0);
+  }
+}
+
+/* Desktop Nav: Hidden / Clean on Home Page, Reveals on Scroll */
+#desktop-nav {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  pointer-events: none;
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#desktop-nav.nav-visible-scrolled {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
 /* Navigation Links with Animated Sliding Pill */
@@ -1231,11 +1148,20 @@ body.light-theme .moon-icon {
   position: fixed;
   right: 24px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateX(25px);
   z-index: 900;
   display: flex;
   flex-direction: column;
   align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.side-nav-index.visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+  pointer-events: auto;
 }
 
 .side-nav-track {

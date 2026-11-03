@@ -85,13 +85,68 @@
   <!-- Interactive Spidey Web Canvas -->
   <canvas id="spidey-web-canvas"></canvas>
 
-  <!-- Aiming Reticle Custom Cursor Elements -->
-  <div id="spidey-cursor-dot" class="aiming-cursor-dot"></div>
-  <div id="spidey-cursor-ring" class="aiming-cursor-ring">
-    <span class="reticle-line reticle-top"></span>
-    <span class="reticle-line reticle-right"></span>
-    <span class="reticle-line reticle-bottom"></span>
-    <span class="reticle-line reticle-left"></span>
+  <!-- Hand Aiming & Relaxing Custom Cursor -->
+  <div id="spidey-hand-cursor" class="spidey-hand-cursor state-aiming">
+    <!-- Fingertip Target Laser Spark -->
+    <div class="fingertip-spark"></div>
+
+    <!-- 1. Aiming Hand (Index Finger Aiming/Pointing) -->
+    <svg class="hand-svg hand-aiming-svg" viewBox="0 0 54 54" width="44" height="44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g class="hand-glow-group">
+        <!-- Palm base -->
+        <path d="M18 24 C14 26 12 32 14 38 C16 44 24 48 32 46 C38 44 42 38 40 30 C39 26 36 24 32 23" 
+              stroke="var(--color-accent-1)" stroke-width="2" stroke-linecap="round" fill="rgba(15,15,18,0.92)"/>
+        <!-- Curled Little Finger -->
+        <path d="M38 31 C40 33 41 36 39 39 C37 41 34 41 32 39" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" fill="rgba(25,25,30,0.85)"/>
+        <!-- Curled Ring Finger -->
+        <path d="M33 27 C36 29 37 33 35 36 C33 38 30 38 28 36" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" fill="rgba(25,25,30,0.85)"/>
+        <!-- Curled Middle Finger -->
+        <path d="M28 23 C31 25 32 29 30 33 C28 35 25 35 23 33" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" fill="rgba(25,25,30,0.85)"/>
+        <!-- Extended Aiming Index Finger (pointing straight to top-left 6,6) -->
+        <path d="M22 21 L8 7 C6 5 3 7 5 9 L18 24" 
+              stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(212,175,55,0.2)"/>
+        <!-- Thumb curled over -->
+        <path d="M15 28 C13 25 15 22 18 21 C21 21 23 23 21 26 C19 29 16 30 15 28 Z" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" fill="rgba(30,30,36,0.9)"/>
+        <!-- Web / Cyber line details on back of hand -->
+        <path d="M22 28 L28 33 M26 25 L32 29" stroke="var(--color-accent-1)" stroke-width="1" stroke-dasharray="2 2" opacity="0.7"/>
+        <!-- Glowing nail / target point on index finger tip -->
+        <circle cx="6" cy="6" r="2.5" fill="#ffffff"/>
+      </g>
+    </svg>
+
+    <!-- 2. Relaxing / Stretching Hand (Open, Flexed & Relaxed after idle) -->
+    <svg class="hand-svg hand-relaxing-svg" viewBox="0 0 54 54" width="44" height="44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g class="hand-glow-group">
+        <!-- Open palm -->
+        <path d="M18 26 C16 32 18 38 22 43 C26 47 34 46 38 41 C41 36 40 30 36 24" 
+              stroke="var(--color-accent-1)" stroke-width="2" fill="rgba(15,15,18,0.92)"/>
+        <!-- Stretched Thumb -->
+        <path d="M16 28 L6 26 C4 26 3 23 5 22 L16 23" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" stroke-linecap="round" fill="rgba(25,25,30,0.85)"/>
+        <!-- Stretched Index Finger -->
+        <path d="M18 22 L11 9 C10 7 13 5 15 7 L22 19" 
+              stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="rgba(212,175,55,0.2)"/>
+        <!-- Stretched Middle Finger -->
+        <path d="M23 19 L23 5 C23 3 26 3 26 5 L27 19" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" stroke-linecap="round" fill="rgba(25,25,30,0.85)"/>
+        <!-- Stretched Ring Finger -->
+        <path d="M28 20 L35 7 C36 5 39 6 38 8 L32 21" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" stroke-linecap="round" fill="rgba(25,25,30,0.85)"/>
+        <!-- Stretched Pinky Finger -->
+        <path d="M33 23 L44 14 C45 12 48 14 46 16 L37 25" 
+              stroke="var(--color-accent-1)" stroke-width="1.8" stroke-linecap="round" fill="rgba(25,25,30,0.85)"/>
+        <!-- Palm stretch lines -->
+        <path d="M20 28 C24 30 28 30 32 27" stroke="var(--color-accent-1)" stroke-width="1.2" opacity="0.6"/>
+        <!-- Relaxed energy particles around stretched hand -->
+        <circle cx="24" cy="3" r="1.5" fill="#ffffff" opacity="0.9"/>
+        <circle cx="4" cy="24" r="1.5" fill="var(--color-accent-1)" opacity="0.8"/>
+        <circle cx="46" cy="13" r="1.5" fill="var(--color-accent-1)" opacity="0.8"/>
+      </g>
+    </svg>
   </div>
 
   <!-- Scroll Progress Indicator -->
@@ -105,6 +160,12 @@
       <a href="#home" class="logo-link">
         <span class="logo-text">AJ<span class="logo-dot">.</span></span>
       </a>
+
+      <!-- Upper Live Section Title with Word-by-Word Animation -->
+      <div id="upper-section-indicator" class="upper-section-indicator" aria-live="polite">
+        <span class="indicator-icon-tag"><i class="fa-solid fa-compass"></i></span>
+        <div id="upper-word-container" class="upper-word-container"></div>
+      </div>
 
       <nav id="desktop-nav" aria-label="Desktop Navigation">
         <div class="nav-pill-wrapper">
@@ -247,23 +308,6 @@
             <div class="floating-badge badge-bottom-right element-float-slow">
               <i class="fa-brands fa-python icon-game"></i>
               <span>Python & Web</span>
-            </div>
-
-            <!-- Interactive Cursor-Tracking Aiming Eye -->
-            <div class="aiming-eye-widget" id="aiming-eye" title="Cyber Eye tracking your cursor">
-              <div class="eye-hud-ring"></div>
-              <div class="eye-outer">
-                <div class="eye-sclera">
-                  <div class="eye-iris" id="eye-iris">
-                    <div class="eye-pupil" id="eye-pupil">
-                      <div class="eye-pupil-glint"></div>
-                    </div>
-                  </div>
-                  <div class="eyelid eyelid-top"></div>
-                  <div class="eyelid eyelid-bottom"></div>
-                </div>
-              </div>
-              <span class="eye-status-label"><span class="eye-status-dot"></span> AIMING</span>
             </div>
           </div>
         </div>
