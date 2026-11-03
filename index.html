@@ -75,6 +75,21 @@
 </head>
 <body class="dark-theme">
 
+  <!-- Cinematic Starting Intro Animation (matching Reference Video) -->
+  <div id="intro-loader" class="intro-loader" aria-label="Starting Animation">
+    <div class="loader-bg-glow"></div>
+    <div class="loader-center-content">
+      <div class="loader-focal-dot"></div>
+      <div class="loader-scramble-word" id="loader-scramble-word">PORTFOLIO</div>
+      <div class="loader-subtitle" id="loader-subtitle">GEN AI &amp; CLOUD DEVELOPER</div>
+      <div class="loader-progress-track">
+        <div class="loader-progress-bar" id="loader-progress-bar"></div>
+      </div>
+      <span class="loader-skip-hint">Click anywhere to skip</span>
+    </div>
+    <canvas id="loader-particle-canvas" class="loader-particle-canvas"></canvas>
+  </div>
+
   <!-- Background Aurora Blobs -->
   <div class="aurora-container">
     <div class="aurora-blob blob-1"></div>
@@ -216,61 +231,71 @@
   <!-- Main Content Areas -->
   <main>
     
-    <!-- Hero Section -->
-    <section id="home" class="hero-section nav-section">
-      <div class="container hero-grid">
-        <div class="hero-content scroll-reveal fade-left">
-          <div class="hero-badge">
-            <span class="badge-dot"></span>
-            <span class="badge-text">Available for Opportunities</span>
+    <!-- Hero Section (Cinematic Showcase matching Reference Theme Video) -->
+    <section id="home" class="hero-section nav-section hero-cinematic-theme">
+      <!-- Ambient Hero Connected Particles Canvas -->
+      <canvas id="hero-particle-canvas" class="hero-particle-canvas"></canvas>
+      <div class="hero-spotlight-glow"></div>
+
+      <div class="container hero-container-cinematic">
+        <!-- Center Developer Portrait with Halo Glow -->
+        <div class="hero-portrait-wrapper scroll-reveal fade-down">
+          <div class="portrait-halo-glow"></div>
+          <div class="portrait-img-box">
+            <img src="assets/profile.jpg" alt="Ashin Jins - BCA Graduate & Gen AI / Cloud Developer" class="cinematic-portrait-img" loading="eager" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 style=%22background: linear-gradient(135deg, %231f2937, %23111827);%22><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2232%22 fill=%22white%22 font-weight=%22bold%22>AJ</text></svg>';">
           </div>
-          
-          <h1 class="hero-title">
-            <span class="greeting">Hi, I'm</span>
-            <span class="name-gradient">Ashin Jins</span>
-          </h1>
-
-          <h2 class="hero-subtitle">
-            <span class="static-txt">I am a </span>
-            <span id="typed-role" class="dynamic-txt"></span>
-          </h2>
-
-          <p class="hero-description">
-            Motivated Bachelor of Computer Applications (BCA) student at Don Bosco College, Mampetta, with foundational expertise in Python, Full-Stack Web Development, MySQL, and Cloud & Generative AI technologies. Experienced in developing intelligent web platforms and deploying scalable cloud solutions.
-          </p>
-
-          <blockquote class="hero-quote">
-            <i class="fa-solid fa-quote-left quote-icon"></i>
-            <span>I am always right about logic, and coding is all about logic.</span>
-          </blockquote>
-
-          <div class="hero-ctas">
-            <a href="#projects" class="btn btn-primary">
-              <span class="btn-text">View Projects</span>
-              <i class="fa-solid fa-arrow-right btn-icon"></i>
-            </a>
-            <a href="#contact" class="btn btn-secondary">
-              <span class="btn-text">Get in Touch</span>
-              <i class="fa-solid fa-paper-plane btn-icon"></i>
-            </a>
+          <!-- Orbiting tech badges -->
+          <div class="hero-orbit-badge badge-orbit-left">
+            <i class="fa-solid fa-brain" style="color: #00f2fe;"></i>
+            <span>Gen AI</span>
+          </div>
+          <div class="hero-orbit-badge badge-orbit-right">
+            <i class="fa-brands fa-aws" style="color: #ff9900;"></i>
+            <span>Cloud & AWS</span>
           </div>
         </div>
 
-        <div class="hero-visual scroll-reveal fade-right">
-          <div class="avatar-frame-container">
-            <div class="avatar-glow"></div>
-            <div class="avatar-frame">
-              <img src="assets/profile.jpg" alt="Ashin Jins - BCA Student & Gen AI / Cloud Developer" class="profile-img" loading="eager" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 style=%22background: linear-gradient(135deg, %234facfe, %2300f2fe);%22><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2232%22 fill=%22white%22 font-weight=%22bold%22>AJ</text></svg>';">
-            </div>
-            <!-- Interactive Floating Badges -->
-            <div class="floating-badge badge-top-left element-float-fast">
-              <i class="fa-solid fa-cloud icon-ai"></i>
-              <span>Gen AI & Cloud</span>
-            </div>
-            <div class="floating-badge badge-bottom-right element-float-slow">
-              <i class="fa-brands fa-python icon-game"></i>
-              <span>Python & Web</span>
-            </div>
+        <!-- Giant Metallic Headline Overlay -->
+        <div class="hero-typography-layer scroll-reveal fade-up">
+          <h1 class="hero-mega-headline">PORTFOLIO</h1>
+          
+          <div class="hero-meta-subtitle">
+            <span class="developer-role-tag">Gen AI &amp; Cloud Developer</span>
+            <span class="meta-separator">•</span>
+            <span class="developer-name-tag">Ashin Jins</span>
+          </div>
+
+          <p class="hero-short-bio">
+            Bachelor of Computer Applications (BCA) at Don Bosco College, Mampetta. Specialized in Generative AI architectures, AWS cloud deployments, Python engineering, and modern web platforms.
+          </p>
+
+          <blockquote class="hero-quote-inline">
+            <i class="fa-solid fa-quote-left quote-icon"></i>
+            <span>"I am always right about logic, and coding is all about logic."</span>
+          </blockquote>
+
+          <div class="hero-actions-row">
+            <a href="#projects" class="btn btn-cinematic-primary">
+              <span>View Projects</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </a>
+            <a href="#contact" class="btn btn-cinematic-secondary">
+              <span>Get in Touch</span>
+              <i class="fa-solid fa-paper-plane"></i>
+            </a>
+          </div>
+
+          <!-- Social Quick Links -->
+          <div class="hero-social-strip">
+            <a href="https://github.com/Ashin-jins" target="_blank" rel="noopener noreferrer" class="hero-social-link" title="GitHub" aria-label="GitHub">
+              <i class="fa-brands fa-github"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/ashin-jins-9b0812373/" target="_blank" rel="noopener noreferrer" class="hero-social-link" title="LinkedIn" aria-label="LinkedIn">
+              <i class="fa-brands fa-linkedin-in"></i>
+            </a>
+            <a href="mailto:ashinjins2005@gmail.com" class="hero-social-link" title="Email" aria-label="Email">
+              <i class="fa-solid fa-envelope"></i>
+            </a>
           </div>
         </div>
       </div>

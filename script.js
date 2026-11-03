@@ -3,6 +3,187 @@
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   
+  /* ==========================================================================
+     CINEMATIC STARTING INTRO ANIMATION (SCRAMBLER TO PORTFOLIO)
+     ========================================================================== */
+  const introLoader = document.getElementById('intro-loader');
+  const scrambleWord = document.getElementById('loader-scramble-word');
+  const loaderBar = document.getElementById('loader-progress-bar');
+  const loaderCanvas = document.getElementById('loader-particle-canvas');
+
+  if (introLoader && scrambleWord) {
+    const targetWord = "PORTFOLIO";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$&*+";
+    let iteration = 0;
+    let isDismissed = false;
+
+    // Optional loader ambient particles
+    if (loaderCanvas) {
+      const lCtx = loaderCanvas.getContext('2d');
+      let lw = loaderCanvas.width = window.innerWidth;
+      let lh = loaderCanvas.height = window.innerHeight;
+      const lParts = Array.from({ length: 45 }, () => ({
+        x: Math.random() * lw,
+        y: Math.random() * lh,
+        r: Math.random() * 1.5 + 0.5,
+        alpha: Math.random() * 0.6 + 0.2,
+        vy: (Math.random() - 0.5) * 0.6
+      }));
+
+      const drawLoaderParts = () => {
+        if (isDismissed) return;
+        lCtx.clearRect(0, 0, lw, lh);
+        lParts.forEach(p => {
+          p.y += p.vy;
+          if (p.y < 0) p.y = lh;
+          if (p.y > lh) p.y = 0;
+          lCtx.beginPath();
+          lCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          lCtx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+          lCtx.fill();
+        });
+        requestAnimationFrame(drawLoaderParts);
+      };
+      requestAnimationFrame(drawLoaderParts);
+    }
+
+    const dismissIntro = () => {
+      if (isDismissed) return;
+      isDismissed = true;
+      introLoader.classList.add('fade-out');
+      setTimeout(() => {
+        introLoader.style.display = 'none';
+      }, 700);
+    };
+
+    // Scramble letters loop
+    const scrambleInterval = setInterval(() => {
+      scrambleWord.innerText = targetWord
+        .split("")
+        .map((letter, index) => {
+          if (index < iteration) {
+            return targetWord[index];
+          }
+          return chars[Math.floor(Math.random() * chars.length)];
+        })
+        .join("");
+
+      iteration += 1 / 2.8;
+
+      if (loaderBar) {
+        const progress = Math.min(100, (iteration / targetWord.length) * 100);
+        loaderBar.style.width = `${progress}%`;
+      }
+
+      if (iteration >= targetWord.length) {
+        clearInterval(scrambleInterval);
+        scrambleWord.innerText = targetWord;
+        scrambleWord.classList.add('locked');
+        setTimeout(dismissIntro, 600);
+      }
+    }, 42);
+
+    // Fast-skip on user click
+    introLoader.addEventListener('click', () => {
+      clearInterval(scrambleInterval);
+      scrambleWord.innerText = targetWord;
+      dismissIntro();
+    });
+  }
+
+  /* ==========================================================================
+     HERO CONNECTED PARTICLE CONSTELLATION CANVAS
+     ========================================================================== */
+  const heroCanvas = document.getElementById('hero-particle-canvas');
+  if (heroCanvas) {
+    const hCtx = heroCanvas.getContext('2d');
+    let hw, hh;
+    let heroParticles = [];
+    const particleTotal = 60;
+
+    const resizeHeroCanvas = () => {
+      hw = heroCanvas.width = heroCanvas.offsetWidth || window.innerWidth;
+      hh = heroCanvas.height = heroCanvas.offsetHeight || window.innerHeight;
+    };
+    resizeHeroCanvas();
+    window.addEventListener('resize', resizeHeroCanvas);
+
+    class HeroConstellationParticle {
+      constructor() {
+        this.x = Math.random() * hw;
+        this.y = Math.random() * hh;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 1.8 + 0.8;
+        this.alpha = Math.random() * 0.5 + 0.2;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0) this.x = hw;
+        if (this.x > hw) this.x = 0;
+        if (this.y < 0) this.y = hh;
+        if (this.y > hh) this.y = 0;
+      }
+      draw() {
+        hCtx.beginPath();
+        hCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        hCtx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        hCtx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleTotal; i++) {
+      heroParticles.push(new HeroConstellationParticle());
+    }
+
+    let hMouseX = -1000, hMouseY = -1000;
+    window.addEventListener('mousemove', (e) => {
+      const rect = heroCanvas.getBoundingClientRect();
+      hMouseX = e.clientX - rect.left;
+      hMouseY = e.clientY - rect.top;
+    });
+
+    const animateHeroConstellation = () => {
+      hCtx.clearRect(0, 0, hw, hh);
+
+      // Connect particles close to each other
+      for (let i = 0; i < heroParticles.length; i++) {
+        for (let j = i + 1; j < heroParticles.length; j++) {
+          const dx = heroParticles[i].x - heroParticles[j].x;
+          const dy = heroParticles[i].y - heroParticles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 115) {
+            hCtx.beginPath();
+            hCtx.moveTo(heroParticles[i].x, heroParticles[i].y);
+            hCtx.lineTo(heroParticles[j].x, heroParticles[j].y);
+            hCtx.strokeStyle = `rgba(255, 255, 255, ${0.16 * (1 - dist / 115)})`;
+            hCtx.lineWidth = 0.7;
+            hCtx.stroke();
+          }
+        }
+      }
+
+      // Draw and animate particles + mouse connect
+      heroParticles.forEach(p => {
+        p.update();
+        p.draw();
+        const mouseDist = Math.hypot(p.x - hMouseX, p.y - hMouseY);
+        if (mouseDist < 125) {
+          hCtx.beginPath();
+          hCtx.moveTo(p.x, p.y);
+          hCtx.lineTo(hMouseX, hMouseY);
+          hCtx.strokeStyle = `rgba(0, 242, 254, ${0.32 * (1 - mouseDist / 125)})`;
+          hCtx.lineWidth = 0.9;
+          hCtx.stroke();
+        }
+      });
+
+      requestAnimationFrame(animateHeroConstellation);
+    };
+    requestAnimationFrame(animateHeroConstellation);
+  }
+
   // Navigation & Header
   const header = document.getElementById('site-header');
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
